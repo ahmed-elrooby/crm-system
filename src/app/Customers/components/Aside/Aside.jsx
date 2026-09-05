@@ -50,7 +50,16 @@ const links = [
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const user = JSON.parse(Cookies.get("user"));
+  const userCookie = Cookies.get("user");
+
+  let user = null;
+
+  try {
+    user = userCookie ? JSON.parse(userCookie) : null;
+  } catch (error) {
+    console.error("Invalid user cookie:", error);
+    user = null;
+  }
   const getRoleName = (role) => {
     switch (role?.toLowerCase()) {
       case "admin":

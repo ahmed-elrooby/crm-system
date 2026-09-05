@@ -1,11 +1,29 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FaBars, FaBell } from "react-icons/fa";
 import Cookies from "js-cookie";
 
 const Header = () => {
-  const user = JSON.parse(Cookies.get("user"));
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const userCookie = Cookies.get("user");
+
+    if (!userCookie) {
+      setUser(null);
+      return;
+    }
+
+    try {
+      const parsedUser = JSON.parse(userCookie);
+      setUser(parsedUser);
+    } catch (error) {
+      console.error("Invalid user cookie:", error);
+      setUser(null);
+    }
+  }, []);
+
   const getRoleName = (role) => {
     switch (role?.toLowerCase()) {
       case "admin":
@@ -18,8 +36,9 @@ const Header = () => {
         return "غير محدد";
     }
   };
+
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 border-b border-gray-200 bg-white/95 backdrop-blur sm:px-6 ">
+    <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 border-b border-gray-200 bg-white/95 backdrop-blur sm:px-6">
       {/* Right Side */}
       <div className="flex items-center min-w-0 gap-3">
         {/* Mobile Menu */}
@@ -44,8 +63,6 @@ const Header = () => {
 
       {/* Left Side */}
       <div className="flex items-center gap-1 sm:gap-2">
-        {/* Search */}
-
         {/* Notifications */}
         <button
           title="الإشعارات"
@@ -72,13 +89,13 @@ const Header = () => {
           >
             {/* Avatar */}
             <div className="flex items-center justify-center font-bold text-blue-600 bg-blue-100 rounded-full h-9 w-9">
-              {user?.fullName?.charAt(0)}
+              {user?.fullName?.charAt(0) || user?.userName?.charAt(0) || "U"}
             </div>
 
             {/* User Info */}
             <div className="hidden text-right sm:block">
               <p className="text-sm font-semibold text-gray-800">
-                {user?.fullName || user?.userName}
+                {user?.fullName || user?.userName || "المستخدم"}
               </p>
 
               <p className="text-[11px] text-gray-400">
