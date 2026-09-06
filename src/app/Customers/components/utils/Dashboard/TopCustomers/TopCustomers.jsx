@@ -1,87 +1,96 @@
-import React from "react";
+"use client";
 
-const topCustomers = [
-  {
-    initials: "أح",
-    name: "أحمد علي",
-    company: "شركة النور للتجارة",
-    type: "مميز",
-    activities: "1 نشاط",
-    badge: "bg-purple-50 text-purple-600",
-  },
-  {
-    initials: "مح",
-    name: "محمد حسن",
-    company: "شركة المستقبل للاستثمار",
-    type: "عادي",
-    activities: "1 نشاط",
-    badge: "bg-blue-50 text-blue-600",
-  },
-  {
-    initials: "سر",
-    name: "سارة خالد",
-    company: "شركة التقنية المتقدمة",
-    type: "محتمل",
-    activities: "1 نشاط",
-    badge: "bg-amber-50 text-amber-600",
-  },
-  {
-    initials: "خا",
-    name: "خالد يوسف",
-    company: "مجموعة الدلتا",
-    type: "مميز",
-    activities: "1 نشاط",
-    badge: "bg-purple-50 text-purple-600",
-  },
-];
+import React, { useContext, useMemo } from "react";
+import { userContext } from "../../../../../../Providers/CustomerProvider/Customer.js";
 
 const TopCustomers = () => {
+  const { analytics } = useContext(userContext);
+
+  const topCustomers = useMemo(() => {
+    return analytics?.data?.topCustomers || [];
+  }, [analytics]);
+
   return (
-    <div dir="rtl" className="p-5 bg-white dash-card rounded-xl">
+    <div
+      dir="rtl"
+      className="p-5 bg-white border shadow-sm border-slate-100 rounded-xl"
+    >
       {/* Header */}
-      <h3 className="mb-3 text-lg font-semibold text-slate-800">أهم العملاء</h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-semibold text-slate-800">أهم العملاء</h3>
+
+        <span className="text-xs text-slate-400">
+          آخر {topCustomers.length} عملاء
+        </span>
+      </div>
 
       {/* Customers */}
-      <div className="space-y-2">
-        {topCustomers.map((customer) => (
-          <div
-            key={customer.name}
-            className="flex items-center justify-between gap-3 rounded-xl p-2.5 transition hover:bg-slate-50"
-          >
-            {/* Customer Info */}
-            <div className="flex items-center min-w-0 gap-3">
-              {/* Avatar */}
-              <div className="flex items-center justify-center text-xs font-semibold text-blue-600 rounded-full h-9 w-9 shrink-0 bg-blue-50">
-                {customer.initials}
-              </div>
+      {topCustomers.length > 0 ? (
+        <div className="space-y-2">
+          {topCustomers.map((customer) => {
+            const name = customer.customerName || "عميل غير معروف";
 
-              {/* Name */}
-              <div className="min-w-0">
-                <p className="text-sm font-medium truncate text-slate-800">
-                  {customer.name}
-                </p>
+            const initials = name
+              .split(" ")
+              .slice(0, 2)
+              .map((word) => word.charAt(0))
+              .join("");
 
-                <p className="text-xs truncate text-slate-500">
-                  {customer.company}
-                </p>
-              </div>
-            </div>
-
-            {/* Customer Type + Activities */}
-            <div className="flex items-center gap-3 shrink-0">
-              <span
-                className={`rounded-md px-2 py-1 text-xs font-medium ${customer.badge}`}
+            return (
+              <div
+                key={customer.customerId}
+                className="flex items-center justify-between gap-3 rounded-xl p-2.5 transition hover:bg-slate-50"
               >
-                {customer.type}
-              </span>
+                {/* Customer Info */}
+                <div className="flex items-center min-w-0 gap-3">
+                  {/* Avatar */}
+                  <div
+                    className="flex items-center justify-center text-xs font-semibold rounded-full h-9 w-9 shrink-0"
+                    style={{
+                      backgroundColor: `${customer.categoryColor || "#2563EB"}15`,
+                      color: customer.categoryColor || "#2563EB",
+                    }}
+                  >
+                    {initials}
+                  </div>
 
-              <span className="text-xs text-slate-500">
-                {customer.activities}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
+                  {/* Name */}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate text-slate-800">
+                      {name}
+                    </p>
+
+                    <p className="text-xs truncate text-slate-500">
+                      {customer.companyName || "بدون شركة"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Category + Activities */}
+                <div className="flex items-center gap-3 shrink-0">
+                  <span
+                    className="px-2 py-1 text-xs font-medium rounded-md"
+                    style={{
+                      backgroundColor: `${customer.categoryColor || "#2563EB"}15`,
+                      color: customer.categoryColor || "#2563EB",
+                    }}
+                  >
+                    {customer.categoryName || "غير مصنف"}
+                  </span>
+
+                  <span className="text-xs text-slate-500">
+                    {Number(customer.activitiesCount || 0)} نشاط
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center py-10 text-sm text-slate-400">
+          لا توجد بيانات للعملاء
+        </div>
+      )}
     </div>
   );
 };

@@ -9,6 +9,26 @@ const CustomerProvider = ({ children }) => {
   const baseUrl = process.env.NEXT_PUBLIC_API;
   const [loadding, setLoadding] = useState(false);
   // ========================= ADMIN ====================
+  const getAnalytics = async () => {
+    try {
+      const { data } = await axios.get(`${baseUrl}/Dashboard/analytics`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Cookies.get("token")}`,
+        },
+      });
+      console.log(data);
+      return data;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  };
+  const { data: analytics } = useQuery({
+    queryKey: ["analytics"],
+    queryFn: getAnalytics,
+  });
+  // ===================== ADD USER ==================
   const handleAddUser = async (values) => {
     try {
       setLoadding(true);
@@ -662,6 +682,7 @@ const CustomerProvider = ({ children }) => {
   return (
     <userContext.Provider
       value={{
+        analytics,
         // admin
         openAddUser,
         setOpenAddUser,

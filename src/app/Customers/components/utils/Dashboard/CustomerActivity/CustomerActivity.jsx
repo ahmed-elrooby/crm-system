@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -12,111 +12,22 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const activityData = {
-  month: [
-    {
-      name: "الأسبوع 1",
-      value: 35,
-      color: "#8B5CF6",
-    },
-    {
-      name: "الأسبوع 2",
-      value: 52,
-      color: "#3B82F6",
-    },
-    {
-      name: "الأسبوع 3",
-      value: 42,
-      color: "#F59E0B",
-    },
-    {
-      name: "الأسبوع 4",
-      value: 68,
-      color: "#22C55E",
-    },
-  ],
+import { userContext } from "../../../../../../Providers/CustomerProvider/Customer.js";
 
-  quarter: [
-    {
-      name: "يونيو",
-      value: 85,
-      color: "#8B5CF6",
-    },
-    {
-      name: "يوليو",
-      value: 120,
-      color: "#3B82F6",
-    },
-    {
-      name: "أغسطس",
-      value: 155,
-      color: "#F59E0B",
-    },
-  ],
-
-  year: [
-    {
-      name: "سبتمبر",
-      value: 80,
-      color: "#8B5CF6",
-    },
-    {
-      name: "أكتوبر",
-      value: 95,
-      color: "#3B82F6",
-    },
-    {
-      name: "نوفمبر",
-      value: 110,
-      color: "#F59E0B",
-    },
-    {
-      name: "ديسمبر",
-      value: 90,
-      color: "#22C55E",
-    },
-    {
-      name: "يناير",
-      value: 130,
-      color: "#06B6D4",
-    },
-    {
-      name: "فبراير",
-      value: 115,
-      color: "#EC4899",
-    },
-    {
-      name: "مارس",
-      value: 145,
-      color: "#F97316",
-    },
-    {
-      name: "أبريل",
-      value: 125,
-      color: "#6366F1",
-    },
-    {
-      name: "مايو",
-      value: 160,
-      color: "#14B8A6",
-    },
-    {
-      name: "يونيو",
-      value: 140,
-      color: "#A855F7",
-    },
-    {
-      name: "يوليو",
-      value: 175,
-      color: "#0EA5E9",
-    },
-    {
-      name: "أغسطس",
-      value: 190,
-      color: "#84CC16",
-    },
-  ],
-};
+const COLORS = [
+  "#8B5CF6",
+  "#3B82F6",
+  "#F59E0B",
+  "#22C55E",
+  "#06B6D4",
+  "#EC4899",
+  "#F97316",
+  "#6366F1",
+  "#14B8A6",
+  "#A855F7",
+  "#0EA5E9",
+  "#84CC16",
+];
 
 const filters = [
   {
@@ -134,19 +45,73 @@ const filters = [
 ];
 
 const CustomerActivity = () => {
+  const { analytics } = useContext(userContext);
+
   const [period, setPeriod] = useState("month");
 
-  const data = activityData[period];
+  const data = useMemo(() => {
+    const monthly = analytics?.data?.monthly || [];
+
+    if (!monthly.length) return [];
+
+    // الشهر الحالي
+    const currentMonth = new Date().getMonth() + 1;
+
+    let filteredData = [];
+
+    if (period === "month") {
+      filteredData = monthly.filter((item) => item.month === currentMonth);
+    }
+
+    if (period === "quarter") {
+      const startMonth = Math.max(currentMonth - 2, 1);
+
+      filteredData = monthly.filter(
+        (item) => item.month >= startMonth && item.month <= currentMonth,
+      );
+    }
+
+    if (period === "year") {
+      filteredData = monthly;
+    }
+
+    return filteredData.map((item, index) => {
+      const quotations = Number(item.quotations || 0);
+      const salesOrders = Number(item.salesOrders || 0);
+      const invoices = Number(item.invoices || 0);
+      const paid = Number(item.paid || 0);
+      const creditNotes = Number(item.creditNotes || 0);
+
+      const total = quotations + salesOrders + invoices + paid + creditNotes;
+
+      return {
+        name: item.monthName,
+
+        value: total,
+
+        quotations,
+        salesOrders,
+        invoices,
+        paid,
+        creditNotes,
+
+        color: COLORS[index % COLORS.length],
+      };
+    });
+  }, [analytics, period]);
 
   return (
-    <div dir="rtl" className="p-5 mb-6 bg-white dash-card rounded-xl">
+    <div
+      dir="rtl"
+      className="p-5 mb-6 bg-white border shadow-sm border-slate-100 rounded-xl"
+    >
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div>
           <h3 className="text-lg font-semibold text-slate-800">نشاط العملاء</h3>
 
           <p className="mt-1 text-xs text-slate-400">
-            توزيع النشاطات حسب النوع
+            إجمالي النشاطات خلال الفترة المحددة
           </p>
         </div>
 
@@ -170,70 +135,72 @@ const CustomerActivity = () => {
       </div>
 
       {/* Chart */}
-      <div className="h-[200px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data}
-            margin={{
-              top: 10,
-              right: 5,
-              left: 0,
-              bottom: 0,
-            }}
-            barCategoryGap="25%"
-          >
-            {/* Grid */}
-            <CartesianGrid
-              vertical={false}
-              stroke="#E2E8F0"
-              strokeDasharray="4 4"
-            />
-
-            {/* X Axis */}
-            <XAxis
-              dataKey="name"
-              axisLine={false}
-              tickLine={false}
-              tick={{
-                fontSize: 10,
-                fill: "#94A3B8",
+      <div className="w-full h-[200px]">
+        {data.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              margin={{
+                top: 10,
+                right: 5,
+                left: 0,
+                bottom: 0,
               }}
-              dy={8}
-            />
+              barCategoryGap="25%"
+            >
+              <CartesianGrid
+                vertical={false}
+                stroke="#E2E8F0"
+                strokeDasharray="4 4"
+              />
 
-            {/* Y Axis */}
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{
-                fontSize: 10,
-                fill: "#94A3B8",
-              }}
-              width={30}
-            />
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                tick={{
+                  fontSize: 10,
+                  fill: "#94A3B8",
+                }}
+                dy={8}
+              />
 
-            {/* Tooltip */}
-            <Tooltip
-              cursor={{
-                fill: "rgba(37, 99, 235, 0.04)",
-              }}
-              contentStyle={{
-                border: "none",
-                borderRadius: "10px",
-                boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
-                fontSize: "12px",
-              }}
-              formatter={(value) => [`${value} نشاط`, "النشاطات"]}
-            />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{
+                  fontSize: 10,
+                  fill: "#94A3B8",
+                }}
+                width={30}
+                allowDecimals={false}
+              />
 
-            {/* Bars */}
-            <Bar dataKey="value" radius={[7, 7, 2, 2]} maxBarSize={45}>
-              {data.map((item, index) => (
-                <Cell key={`cell-${index}`} fill={item.color} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+              <Tooltip
+                cursor={{
+                  fill: "rgba(37, 99, 235, 0.04)",
+                }}
+                contentStyle={{
+                  border: "none",
+                  borderRadius: "10px",
+                  boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
+                  fontSize: "12px",
+                }}
+                formatter={(value) => [`${value} نشاط`, "إجمالي النشاطات"]}
+              />
+
+              <Bar dataKey="value" radius={[7, 7, 2, 2]} maxBarSize={45}>
+                {data.map((item, index) => (
+                  <Cell key={`cell-${index}`} fill={item.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-full text-sm text-slate-400">
+            لا توجد بيانات للنشاطات
+          </div>
+        )}
       </div>
     </div>
   );

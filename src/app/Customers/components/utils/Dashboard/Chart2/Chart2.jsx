@@ -1,36 +1,39 @@
 "use client";
 
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import React, { useContext, useMemo } from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
-const data = [
-  {
-    name: "مميز",
-    value: 40,
-    color: "#8B5CF6",
-  },
-  {
-    name: "عادي",
-    value: 40,
-    color: "#3B82F6",
-  },
-  {
-    name: "محتمل",
-    value: 20,
-    color: "#F59E0B",
-  },
-  {
-    name: "تجزئة",
-    value: 0,
-    color: "#22C55E",
-  },
-  {
-    name: "جملة",
-    value: 0,
-    color: "#06B6D4",
-  },
-];
+import { userContext } from "../../../../../../Providers/CustomerProvider/Customer.js";
 
 const CustomerDistribution = () => {
+  const { customersCategories } = useContext(userContext);
+
+  const data = useMemo(() => {
+    if (!customersCategories?.length) return [];
+
+    const categoriesWithCustomers = customersCategories.filter(
+      (category) => Number(category?.customersCount || 0) > 0,
+    );
+
+    const total = categoriesWithCustomers.reduce(
+      (sum, category) => sum + Number(category?.customersCount || 0),
+      0,
+    );
+
+    if (!total) return [];
+
+    return categoriesWithCustomers.map((category) => {
+      const value = Number(category?.customersCount || 0);
+
+      return {
+        name: category?.name || "غير مصنف",
+        value,
+        percentage: ((value / total) * 100).toFixed(1),
+        color: category?.color || "#2563EB",
+      };
+    });
+  }, [customersCategories]);
+
   return (
     <div className="p-5 bg-white border shadow-sm border-slate-100 rounded-2xl">
       {/* Title */}
@@ -39,26 +42,42 @@ const CustomerDistribution = () => {
       </h3>
 
       {/* Chart */}
-      <div className="h-[160px] w-full ">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              innerRadius={42}
-              outerRadius={68}
-              paddingAngle={2}
-              stroke="none"
-            >
-              {data.map((item) => (
-                <Cell key={item.name} fill={item.color} />
-              ))}
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
+      <div className="w-full h-[160px]">
+        {data.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                innerRadius={42}
+                outerRadius={68}
+                paddingAngle={2}
+                stroke="none"
+              >
+                {data.map((item) => (
+                  <Cell key={item.name} fill={item.color} />
+                ))}
+              </Pie>
+
+              <Tooltip
+                formatter={(value, name) => [`${value} عميل`, name]}
+                contentStyle={{
+                  borderRadius: "10px",
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
+                  fontSize: "12px",
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-full text-sm text-slate-400">
+            لا توجد بيانات
+          </div>
+        )}
       </div>
 
       {/* Legend */}
@@ -76,7 +95,11 @@ const CustomerDistribution = () => {
               <span className="text-slate-600">{item.name}</span>
             </div>
 
-            <span className="font-medium text-slate-700">{item.value}%</span>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-slate-700">{item.value}</span>
+
+              <span className="text-slate-400">({item.percentage}%)</span>
+            </div>
           </div>
         ))}
       </div>

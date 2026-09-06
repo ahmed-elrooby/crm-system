@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useContext, useMemo } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -13,49 +13,61 @@ import {
   Area,
 } from "recharts";
 
+import { userContext } from "../../../../../../Providers/CustomerProvider/Customer.js";
+
 const CustomerChart = () => {
-  const data = [
-    {
-      month: "يناير",
-      customers: 180,
-      newCustomers: 8,
-    },
-    {
-      month: "فبراير",
-      customers: 210,
-      newCustomers: 10,
-    },
-    {
-      month: "مارس",
-      customers: 240,
-      newCustomers: 14,
-    },
-    {
-      month: "أبريل",
-      customers: 280,
-      newCustomers: 18,
-    },
-    {
-      month: "مايو",
-      customers: 320,
-      newCustomers: 22,
-    },
-    {
-      month: "يونيو",
-      customers: 360,
-      newCustomers: 25,
-    },
-    {
-      month: "يوليو",
-      customers: 390,
-      newCustomers: 18,
-    },
-    {
-      month: "أغسطس",
-      customers: 420,
-      newCustomers: 12,
-    },
-  ];
+  const { customers } = useContext(userContext);
+
+  const currentYear = new Date().getFullYear();
+
+  const data = useMemo(() => {
+    const months = [
+      "يناير",
+      "فبراير",
+      "مارس",
+      "أبريل",
+      "مايو",
+      "يونيو",
+      "يوليو",
+      "أغسطس",
+      "سبتمبر",
+      "أكتوبر",
+      "نوفمبر",
+      "ديسمبر",
+    ];
+
+    // عدد العملاء الجدد في كل شهر
+    const monthlyNewCustomers = Array(12).fill(0);
+
+    customers?.forEach((customer) => {
+      if (!customer?.createdAt) return;
+
+      const date = new Date(customer.createdAt);
+
+      if (date.getFullYear() === currentYear) {
+        const monthIndex = date.getMonth();
+
+        monthlyNewCustomers[monthIndex]++;
+      }
+    });
+
+    // حساب إجمالي العملاء بشكل تراكمي
+    let totalCustomers = 0;
+
+    return months.map((month, index) => {
+      totalCustomers += monthlyNewCustomers[index];
+
+      return {
+        month,
+        customers: totalCustomers,
+        newCustomers: monthlyNewCustomers[index],
+      };
+    });
+  }, [customers, currentYear]);
+
+  const maxCustomers = Math.max(...data.map((item) => item.customers), 10);
+
+  const yAxisMax = Math.ceil(maxCustomers / 10) * 10;
 
   return (
     <div className="bg-white border col-span-2 border-slate-100 rounded-2xl shadow-sm p-5 h-[390px]">
@@ -69,9 +81,7 @@ const CustomerChart = () => {
           </p>
         </div>
 
-        <button className="text-sm transition-colors text-slate-400 hover:text-blue-600">
-          آخر 8 أشهر
-        </button>
+        <span className="text-sm text-slate-400">{currentYear}</span>
       </div>
 
       {/* Chart */}
@@ -86,14 +96,12 @@ const CustomerChart = () => {
               bottom: 5,
             }}
           >
-            {/* Grid */}
             <CartesianGrid
               strokeDasharray="0"
               vertical={false}
               stroke="#e2e8f0"
             />
 
-            {/* X Axis */}
             <XAxis
               dataKey="month"
               axisLine={false}
@@ -105,7 +113,6 @@ const CustomerChart = () => {
               dy={8}
             />
 
-            {/* Y Axis */}
             <YAxis
               axisLine={false}
               tickLine={false}
@@ -113,12 +120,10 @@ const CustomerChart = () => {
                 fontSize: 10,
                 fill: "#64748b",
               }}
-              domain={[0, 450]}
-              ticks={[0, 50, 100, 150, 200, 250, 300, 350, 400, 450]}
+              domain={[0, yAxisMax]}
               width={35}
             />
 
-            {/* Tooltip */}
             <Tooltip
               contentStyle={{
                 borderRadius: "10px",
@@ -126,9 +131,9 @@ const CustomerChart = () => {
                 boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
                 fontSize: "12px",
               }}
+              formatter={(value, name) => [value, name]}
             />
 
-            {/* Legend */}
             <Legend
               verticalAlign="top"
               height={35}
@@ -138,7 +143,7 @@ const CustomerChart = () => {
               }}
             />
 
-            {/* Area under customers line */}
+            {/* Area */}
             <Area
               type="monotone"
               dataKey="customers"
@@ -148,7 +153,7 @@ const CustomerChart = () => {
               legendType="none"
             />
 
-            {/* Total Customers */}
+            {/* إجمالي العملاء */}
             <Line
               type="monotone"
               dataKey="customers"
@@ -165,7 +170,7 @@ const CustomerChart = () => {
               }}
             />
 
-            {/* New Customers */}
+            {/* العملاء الجدد */}
             <Line
               type="monotone"
               dataKey="newCustomers"

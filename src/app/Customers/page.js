@@ -27,7 +27,7 @@ export default function Home() {
         <TopCustomers />
         <RecentCustomers />
       </div>
-      <QuickActions />
+      {/* <QuickActions /> */}
     </>
   );
 }
