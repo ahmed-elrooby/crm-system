@@ -2,17 +2,138 @@
 import React, { createContext, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import {
-  QueryClient,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 export const userContext = createContext();
 const CustomerProvider = ({ children }) => {
   const baseUrl = process.env.NEXT_PUBLIC_API;
   const [loadding, setLoadding] = useState(false);
+  // ========================= ADMIN ====================
+  const handleAddUser = async (values) => {
+    try {
+      setLoadding(true);
+      const { data } = await axios.post(`${baseUrl}/Users`, values, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Cookies.get("token")}`,
+        },
+      });
+      console.log(data);
+      return data;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    } finally {
+      setLoadding(false);
+    }
+  };
+  const [openAddUser, setOpenAddUser] = useState(false);
+  const userQury = useQueryClient();
+  const handleAddUserMutation = useMutation({
+    mutationFn: handleAddUser,
+    onSuccess: (data) => {
+      toast.success("تم اضافة المستخدم بنجاح");
+      setOpenAddUser(false);
+      userQury.invalidateQueries(["users"]);
+    },
+    onError: (error) => {
+      toast.error(
+        error?.response?.data?.message || "حدث خطاء اثناء اضافة المستخدم",
+      );
+    },
+  });
+  const handleAddUserFun = (values) => {
+    handleAddUserMutation.mutate(values);
+  };
+  // ===================== GET USERS ==================
+  const getUsers = async () => {
+    try {
+      const { data } = await axios.get(`${baseUrl}/Users`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Cookies.get("token")}`,
+        },
+      });
+      console.log(data);
+      return data;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  };
+  const { data: users, isLoading: isLoadingUsers } = useQuery({
+    queryKey: ["users"],
+    queryFn: getUsers,
+  });
+  // ======================= DELETE USER ======================
+  const handleDeleteUser = async (id) => {
+    try {
+      const { data } = await axios.delete(`${baseUrl}/Users/${id}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Cookies.get("token")}`,
+        },
+      });
+      console.log(data);
+      return data;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  };
+  const handleDeleteUserMutation = useMutation({
+    mutationKey: ["deleteUser"],
+    mutationFn: handleDeleteUser,
+    onSuccess: (data) => {
+      userQury.invalidateQueries(["user"]);
+      toast.success("تم حذف المستخدم بنجاح");
+    },
+    onError: (error) => {
+      toast.error(
+        error?.response?.data?.message || "حدث خطاء اثناء حذف المستخدم",
+      );
+    },
+  });
+  const handleDeleteUserFun = (id) => {
+    handleDeleteUserMutation.mutate(id);
+  };
+  // ======================= UPDATE USER ======================
+  const handleUpdateUser = async ({ id, values }) => {
+    try {
+      setLoadding(true);
+      const { data } = await axios.put(`${baseUrl}/Users/${id}`, values, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Cookies.get("token")}`,
+        },
+      });
+      console.log(data);
+      return data;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    } finally {
+      setLoadding(false);
+    }
+  };
+  const [openUpdateUser, setOpenUpdateUser] = useState(false);
+  const handleUpdateUserMutation = useMutation({
+    mutationFn: handleUpdateUser,
+    onSuccess: (data) => {
+      toast.success("تم تعديل المستخدم بنجاح");
+      setOpenUpdateUser(false);
+      userQury.invalidateQueries(["users"]);
+    },
+    onError: (error) => {
+      toast.error(
+        error?.response?.data?.message || "حدث خطاء اثناء تعديل المستخدم",
+      );
+    },
+  });
+  const handleUpdateUserFun = ({ id, values }) => {
+    handleUpdateUserMutation.mutate({ id, values });
+  };
+  // ===================== GET CUSTOMERS CATEGORIES ==================
   const getCustomersCategories = async () => {
     try {
       const { data } = await axios.get(`${baseUrl}/CustomerCategories`, {
@@ -537,9 +658,21 @@ const CustomerProvider = ({ children }) => {
   const handleAddDocumentSubmit = (values) => {
     handleAddDocumentMutation.mutate(values);
   };
+
   return (
     <userContext.Provider
       value={{
+        // admin
+        openAddUser,
+        setOpenAddUser,
+        handleAddUserFun,
+        users,
+        isLoadingUsers,
+        handleDeleteUserFun,
+        openUpdateUser,
+        setOpenUpdateUser,
+        handleUpdateUserFun,
+        // users
         handleAddCustomerSubmit,
         openAddCustomer,
         setOpenAddCustomer,

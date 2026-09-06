@@ -79,7 +79,7 @@ const Auth = ({ children }) => {
       // =========================
 
       if (role === "admin" || role === "Admin") {
-        router.push("/Admin");
+        router.push("/Customers");
       } else if (role === "User") {
         router.push("/Customers");
       } else {

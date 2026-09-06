@@ -4,12 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation.js";
 import { useEffect, useState } from "react";
 import {
-  FaChartBar,
   FaUsers,
   FaTags,
   FaLayerGroup,
-  FaHashtag,
-  FaCog,
   FaSignOutAlt,
   FaThLarge,
   FaTimes,
@@ -25,6 +22,11 @@ const links = [
     section: "الرئيسية",
   },
   {
+    name: "المستخدمين",
+    link: "/Customers/Users",
+    icon: <FaUsers />,
+  },
+  {
     name: "جميع العملاء",
     link: "/Customers/Customer",
     icon: <FaUsers />,
@@ -36,7 +38,7 @@ const links = [
     icon: <FaTags />,
   },
   {
-    name: " تصنيفات الملفات",
+    name: "تصنيفات الملفات",
     link: "/Customers/FileCategory",
     icon: <FaLayerGroup />,
   },
@@ -50,6 +52,7 @@ const links = [
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+
   const userCookie = Cookies.get("user");
 
   let user = null;
@@ -60,6 +63,13 @@ export default function Sidebar() {
     console.error("Invalid user cookie:", error);
     user = null;
   }
+
+  // تحديد الـ Role
+  const userRole = user?.roles?.[0]?.toLowerCase();
+
+  const isAdmin = userRole === "admin";
+  const isUser = userRole === "user";
+
   const getRoleName = (role) => {
     switch (role?.toLowerCase()) {
       case "admin":
@@ -72,6 +82,16 @@ export default function Sidebar() {
         return "غير محدد";
     }
   };
+
+  // إخفاء صفحة المستخدمين عن الـ User
+  const filteredLinks = links.filter((item) => {
+    if (item.link === "/Customers/Users") {
+      return isAdmin;
+    }
+
+    return true;
+  });
+
   useEffect(() => {
     const handleOpenSidebar = () => {
       setOpen(true);
@@ -136,7 +156,7 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 overflow-y-auto">
-          {links.map((item) => (
+          {filteredLinks.map((item) => (
             <div key={item.name}>
               {item.section && (
                 <div className="mb-2 mt-5 px-3 text-[11px] font-bold uppercase tracking-wide text-gray-400 first:mt-0">
@@ -148,17 +168,17 @@ export default function Sidebar() {
                 href={item.link}
                 onClick={() => setOpen(false)}
                 className={`
-    group relative mb-1 flex items-center gap-3
-    rounded-xl px-3 py-2.5
-    text-sm font-medium
-    transition-all duration-200
+                  group relative mb-1 flex items-center gap-3
+                  rounded-xl px-3 py-2.5
+                  text-sm font-medium
+                  transition-all duration-200
 
-    ${
-      pathname === item.link
-        ? "bg-blue-50 text-blue-600"
-        : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"
-    }
-  `}
+                  ${
+                    pathname === item.link
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"
+                  }
+                `}
               >
                 {/* Active Indicator */}
                 {pathname === item.link && (
@@ -168,16 +188,16 @@ export default function Sidebar() {
                 {/* Icon */}
                 <span
                   className={`
-      flex h-9 w-9 shrink-0 items-center justify-center
-      rounded-lg text-base
-      transition-all duration-200
+                    flex h-9 w-9 shrink-0 items-center justify-center
+                    rounded-lg text-base
+                    transition-all duration-200
 
-      ${
-        pathname === item.link
-          ? "bg-blue-600 text-white shadow-sm"
-          : "bg-gray-50 text-gray-400 group-hover:bg-blue-100 group-hover:text-blue-600"
-      }
-    `}
+                    ${
+                      pathname === item.link
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "bg-gray-50 text-gray-400 group-hover:bg-blue-100 group-hover:text-blue-600"
+                    }
+                  `}
                 >
                   {item.icon}
                 </span>
@@ -185,13 +205,14 @@ export default function Sidebar() {
                 {/* Name */}
                 <span
                   className={`
-      transition-colors
-      ${
-        pathname === item.link
-          ? "font-semibold text-blue-600"
-          : "text-gray-600 group-hover:text-blue-600"
-      }
-    `}
+                    transition-colors
+
+                    ${
+                      pathname === item.link
+                        ? "font-semibold text-blue-600"
+                        : "text-gray-600 group-hover:text-blue-600"
+                    }
+                  `}
                 >
                   {item.name}
                 </span>

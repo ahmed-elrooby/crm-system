@@ -244,21 +244,15 @@ const AddCustomer = () => {
                       />
 
                       {/* Country */}
-                      <SelectField
+                      <InputField
                         name="country"
                         label="الدولة"
+                        placeholder="مثال: مصر"
                         icon={<FiGlobe />}
                         required
                         error={errors.country}
                         touched={touched.country}
-                      >
-                        <option value="">اختر الدولة</option>
-                        <option value="Egypt">مصر</option>
-                        <option value="USA">الولايات المتحدة</option>
-                        <option value="UK">المملكة المتحدة</option>
-                        <option value="UAE">الإمارات</option>
-                        <option value="Saudi Arabia">السعودية</option>
-                      </SelectField>
+                      />
                     </div>
                   </section>
 
